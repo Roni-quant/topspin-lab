@@ -42,7 +42,7 @@ topspin-lab/
 ├── ratings/          # Sequential Elo engine
 ├── experiments/      # London 2026 validation, retraining, HTML report
 ├── docs/             # Methodology + results
-├── mvp/              # Live odds + paper-trade prototype (separate from research)
+├── viz/              # Plot generators (writes docs/img/*.png)
 └── data/, models/    # Local artifacts (not committed — regenerate)
 ```
 
@@ -53,7 +53,7 @@ git clone https://github.com/roni-quant/topspin-lab.git
 cd topspin-lab
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env    # fill in ITTF credentials
+cp .env.example .env    # fill in ITTF credentials (Windows: `copy`)
 ```
 
 Then run the pipeline end-to-end:
@@ -77,6 +77,26 @@ python -m experiments.build_london_report
 ```
 
 Open `experiments/london_2026_report.html` to see the result.
+
+## Visualizations
+
+After running the pipeline, regenerate the plots:
+
+```bash
+python -m viz.make_all
+```
+
+Outputs land in `docs/img/`:
+
+- **`player_elo_<name>.png`** — one player's Elo over their career, with their peak window highlighted in green.
+- **`all_players_overlay.png`** — every active player's career as a faint gray line, with three named stars overlaid in red / blue / green.
+
+Run individually for any player:
+
+```bash
+python -m viz.player_elo_trajectory "Fan Zhendong"
+python -m viz.all_players_overlay --stars "Ma Long" "Fan Zhendong" "Sun Yingsha"
+```
 
 ## What's in the model
 
@@ -109,6 +129,16 @@ All features are computed walking each player's history forward in time. A playe
 - One tournament is one tournament — the 75% headline has a ~3% Wilson interval.
 
 Full list in [`docs/methodology.md`](docs/methodology.md).
+
+## Scope and intent
+
+This repository is a **research and educational project**. It demonstrates a clean, leakage-free Elo + ML pipeline for predicting table-tennis outcomes and reports honest out-of-sample numbers. It is:
+
+- **Not** a betting tool. There is no odds-API integration, no staking logic, no money flow.
+- **Not** financial advice. Predicted probabilities are model outputs, not signals to act on.
+- **Not** affiliated with the ITTF or any bookmaker.
+
+Use it to study the methodology, reproduce the numbers, or extend the model.
 
 ## Contributing
 

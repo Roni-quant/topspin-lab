@@ -1,7 +1,6 @@
 """Retrain enhanced 9-feature RF on full pre-London history, save to models/random_forest_v2.pkl.
 
-Replaces the stale 5-feature artifact that didn't match mvp/config.py's
-FEATURE_NAMES (which imports FEATURE_COLS_ENHANCED).
+Uses the canonical feature set defined in `pipeline.train_models_v2.FEATURE_COLS_ENHANCED`.
 """
 
 from __future__ import annotations

@@ -37,7 +37,7 @@ python -m experiments.validate_london_2026 # Holdout validation
 ## Testing
 
 ```bash
-pytest mvp/tests/ -v
+pytest tests/ -v
 ```
 
 ## Submitting a PR

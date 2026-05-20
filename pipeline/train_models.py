@@ -1,4 +1,12 @@
-"""Stage 5 — Model Training & Testing.
+"""Stage 5 — Model Training (v1, SUPERSEDED).
+
+NOTE: v1 trainer for the 5-feature baseline. Shipped pipeline uses
+`train_models_v2.py` (9 features). Kept for baseline comparisons in
+`docs/results.md`. Do not extend.
+
+---
+
+Stage 5 — Model Training & Testing.
 
 Reads model_features.parquet, splits by time (2024+ as test),
 trains two baseline models, and evaluates on held-out test data.

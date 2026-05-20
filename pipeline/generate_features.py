@@ -1,4 +1,13 @@
-"""Stage 4 — Feature Generation.
+"""Stage 4 — Feature Generation (v1, SUPERSEDED).
+
+NOTE: This is the v1 baseline-features generator (5 features: Elo diff +
+cumulative match/win counts). The shipped pipeline uses `generate_features_v2.py`
+which adds 4 recent-form features. v1 is kept only so the baseline comparison
+in `docs/results.md` can be regenerated. Do not extend.
+
+---
+
+Stage 4 — Feature Generation.
 
 Reads matches_with_elo.parquet, generates prediction features using only
 past data (no look-ahead), and outputs model_features.parquet.

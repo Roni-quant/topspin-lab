@@ -1,62 +1,98 @@
 # topspin-lab
 
-> **Elo-based prediction for table tennis, validated on truly unseen data.**
-> 75.06% accuracy / 0.836 AUC on the ITTF World Team Championships London 2026 — a tournament that did not exist when the model was trained.
+> **An Elo + ML pipeline for table tennis, validated on a tournament that didn't exist at training time.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+![Elo trajectories — 12,700 careers, 3 stars highlighted](docs/img/all_players_overlay.png)
 
-A research pipeline for sequential Elo rating and machine-learning prediction of table-tennis match outcomes. Built around three principles:
+---
 
-1. **No look-ahead bias.** All features and ratings at time `t` depend only on data with timestamp `< t`. Time-based splits only, never random.
-2. **Reproducibility first.** Every metric in this repository can be regenerated from raw data + code. No "trust me" model artifacts.
-3. **Honest evaluation.** Headline numbers come from a tournament that did not exist at training time, not a re-split of the training distribution.
+## The hook
 
-## Headline result
+I trained a model on every ITTF singles match I could find — **157,836 matches stretching back to 1988**. Then I froze it.
 
-The model was trained on 157,836 matches up to 2026-03-16, then frozen. It was then asked to predict every singles rubber in the ITTF World Team Championships London 2026 (April 28 – May 10, 2026):
+Six weeks later, the ITTF World Team Championships started in London. The model had never seen a single match from it. I asked it to predict all 822 singles rubbers.
+
+It got **617 of them right.**
 
 | | n | Accuracy | AUC | Brier | LogLoss |
 |---|---:|---:|---:|---:|---:|
-| **London 2026, enhanced RF (9 features)** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
-| Pure Elo prior (no model) | 822 | 73.97% | 0.8333 | 0.1671 | 0.5024 |
+| **London 2026 — model on truly unseen tournament** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
 
-Pure Elo alone carries ~95% of the signal. The full per-match breakdown is in [`experiments/london_2026_report.html`](experiments/london_2026_report.html) — open it in a browser to see every prediction, the confidence, the actual outcome, and where the model was wrong.
+That is the only number on this page that matters, and it is reproducible from the code in this repo.
 
-See [`docs/results.md`](docs/results.md) for the full numbers and [`docs/methodology.md`](docs/methodology.md) for the design decisions.
+---
 
-## How it works (in 60 seconds)
+## Why I built it
 
-```
-ITTF API   →  raw_matches  →  clean  →  Elo ratings  →  features  →  RF model
-(scrape)      (Parquet)       (dedupe)  (sequential)    (form + Elo)  (predict)
-```
+A popular tweet claimed an AI model trained on 95,491 sports matches predicted outcomes with 85% accuracy. I was suspicious. Most "AI predicts X" claims share a tell: the model is scored on a re-split of its own training distribution. The 85% comes from data the model has *already statistically seen*.
 
-Each stage is a separate Python module under `pipeline/`, reads Parquet, writes Parquet, and is idempotent. The Elo engine (`ratings/elo.py`) is plain Python — standard K=32, base 1500. The Random Forest uses 9 features: Elo difference plus recent-form and workload indicators.
+I wanted to do the honest version. Pick a sport I find under-explored (table tennis), build the simplest possible model (Elo + a small Random Forest), and then evaluate it the way you would evaluate a forecaster — on an event that *physically did not exist* when the model stopped learning.
 
-## Repository structure
+**Three principles, in order:**
 
-```
-topspin-lab/
-├── pipeline/         # Numbered stages: fetch → clean → elo → features → train
-├── ratings/          # Sequential Elo engine
-├── experiments/      # London 2026 validation, retraining, HTML report
-├── docs/             # Methodology + results
-├── viz/              # Plot generators (writes docs/img/*.png)
-└── data/, models/    # Local artifacts (not committed — regenerate)
-```
+1. **No look-ahead bias.** Every feature at time `t` uses only data with timestamp `< t`. Always. No exceptions. Treated as a correctness bug, not a performance issue.
+2. **Time-based splits only.** Never random splits on time-series data.
+3. **Reproducibility first.** Every metric on this page can be regenerated from raw data + code. No `.pkl` artifacts are committed.
 
-## Quick start
+---
+
+## What the model sees
+
+The whole pipeline is built around one rating system: **Elo**. Standard formulation, K=32, base 1500. Every match in chronological order updates two players' ratings.
+
+That gives every player a trajectory. Here's Ma Long's, the most-rated player in our corpus:
+
+![Ma Long — Elo trajectory over his career](docs/img/player_elo_ma_long.png)
+
+White line is his full career. Green is his peak window — the top 20% of matches by smoothed Elo. The green dot is his career peak rating in our data: **~2600**, roughly 1100 points above a base-rate player. That is what "world-class" looks like to the model.
+
+Now look at all 1,486 players with 50+ matches, with three stars overlaid:
+
+![All players with three stars](docs/img/all_players_overlay.png)
+
+Two things to notice. **First**, the cloud has a ceiling — almost nobody crosses ~2400. **Second**, the stars escape that ceiling on a remarkably consistent trajectory: each builds from base Elo through their first ~100 matches, then climbs. The model doesn't know the names. It just sees three players whose ratings keep going up.
+
+---
+
+## The test
+
+The model was trained on every match up to **2026-03-16**. Frozen.
+
+Then on **April 28**, the ITTF World Team Championships London 2026 started. The model was asked to predict every singles rubber. Two weeks and 822 predictions later:
+
+[![London 2026 — interactive dashboard](docs/img/london_2026_dashboard.png)](experiments/london_2026_report.html)
+
+> *Click the image to open the [full interactive HTML report](experiments/london_2026_report.html) — every match, every prediction, every actual outcome.*
+
+**75.1% accuracy. 0.836 AUC. 617 correct calls out of 822.** Calibration is on the diagonal — when the model says 80%, the model is right ~80% of the time. High-confidence (≥75%) predictions land at **85.9%**.
+
+---
+
+## What surprised me
+
+Three findings I didn't expect:
+
+1. **Pure Elo alone gets 73.97%.** No ML, no features. Just rating difference. The Random Forest adds *one percentage point*. Most of the signal in table tennis lives in a single number computed by 1960s arithmetic.
+
+2. **Opponent's recent form is ~2× more predictive than the player's own.** A player on a cold streak entering a match against a strong opponent is a clearer signal than a player on a hot streak. Strong opponents punish weakness more reliably than they reward strength.
+
+3. **The 9-feature model is well-calibrated mid-range but under-confident at the extremes.** When it says 90%, reality is 95%. This is the opposite failure mode from most ML models, which over-confidently shout 90% when reality is 75%.
+
+The first finding is the one that made the whole project feel honest. If a model trained on six features (Elo difference + recent form) is one point better than Elo alone, that *is* the news. Many published "AI sports prediction" results would have stopped at the headline and never published the comparison.
+
+---
+
+## Reproduce it
 
 ```bash
-git clone https://github.com/roni-quant/topspin-lab.git
+git clone https://github.com/Roni-quant/topspin-lab.git
 cd topspin-lab
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env    # fill in ITTF credentials (Windows: `copy`)
 ```
 
-Then run the pipeline end-to-end:
+Then the pipeline, end-to-end:
 
 ```bash
 # Scrape (slow on first run — uses ITTF API)
@@ -74,40 +110,48 @@ python -m experiments.retrain_enhanced_rf
 python -m experiments.fetch_london_2026
 python -m experiments.validate_london_2026
 python -m experiments.build_london_report
-```
 
-Open `experiments/london_2026_report.html` to see the result.
-
-## Visualizations
-
-After running the pipeline, regenerate the plots:
-
-```bash
+# Regenerate the plots in docs/img/
 python -m viz.make_all
 ```
 
-Outputs land in `docs/img/`:
+Then open `experiments/london_2026_report.html`.
 
-- **`player_elo_<name>.png`** — one player's Elo over their career, with their peak window highlighted in green.
-- **`all_players_overlay.png`** — every active player's career as a faint gray line, with three named stars overlaid in red / blue / green.
+---
 
-Run individually for any player:
+## How it works (60 seconds)
 
-```bash
-python -m viz.player_elo_trajectory "Fan Zhendong"
-python -m viz.all_players_overlay --stars "Ma Long" "Fan Zhendong" "Sun Yingsha"
+```
+ITTF API   →  raw_matches  →  clean  →  Elo ratings  →  features  →  RF model
+(scrape)      (Parquet)       (dedupe)  (sequential)    (form + Elo)  (predict)
 ```
 
-## What's in the model
+Each stage is a separate Python module under `pipeline/`, reads Parquet, writes Parquet, and is idempotent. The Elo engine (`ratings/elo.py`) is plain Python — standard K=32, base 1500. The Random Forest uses 9 features:
 
 | Feature | What it measures |
 |---|---|
 | `elo_difference` | Pre-match rating gap (signed: A − B) |
 | `form_last_5_a/b`, `form_last_10_a/b` | Win rate over the most recent 5/10 matches |
-| `form_7_days_a/b` | Win rate over the last 7 calendar days (fatigue signal) |
+| `form_7_days_a/b` | Win rate over the last 7 calendar days |
 | `matches_last_7_a/b` | Match count over the last 7 days (workload) |
 
-All features are computed walking each player's history forward in time. A player's first match has form features as `NaN`. There is no random shuffling anywhere in the pipeline.
+All features computed by walking each player's history forward. A player's first match has form features as `NaN` (filled with 0 at training time — explicit, not silent imputation). No random shuffling anywhere.
+
+---
+
+## Repository structure
+
+```
+topspin-lab/
+├── pipeline/         # Numbered stages: fetch → clean → elo → features → train
+├── ratings/          # Sequential Elo engine
+├── experiments/      # London 2026 validation, retraining, HTML report
+├── viz/              # Plot generators (writes docs/img/*.png)
+├── docs/             # methodology.md, results.md, generated images
+└── data/, models/    # Local artifacts (not committed — regenerate)
+```
+
+---
 
 ## Why this is not a Kaggle toy
 
@@ -115,20 +159,24 @@ All features are computed walking each player's history forward in time. A playe
 |---|---|
 | Look-ahead bias | Strict chronological processing; pre-match Elo captured before update; features use only past entries |
 | Random vs time splits | Time-based splits at the calendar-year boundary; walk-forward validation in `pipeline/forward_test.py` |
-| Cold-start players | Excluded from headline metric (35 / 857 in London 2026); reported separately |
+| Cold-start players | Excluded from the headline metric (35 / 857 in London 2026); reported separately |
 | Doubles vs singles | Doubles filtered at scrape time; Elo on individuals only |
 | Calibration | Reliability tables in `docs/results.md`; mid-range well-calibrated, slight under-confidence at extremes |
 | Reproducibility | Model artifact is *not* committed — `experiments/retrain_enhanced_rf.py` rebuilds it from features |
 | Supply-chain hygiene | No `.pkl` in the repo; users regenerate locally. See `CONTRIBUTING.md`. |
+
+---
 
 ## Known limitations
 
 - No surface / equipment / ball-type modeling.
 - K-factor not tuned by event tier.
 - No team-rubber order modeling (in team formats, match order is a strategic choice).
-- One tournament is one tournament — the 75% headline has a ~3% Wilson interval.
+- One tournament is one tournament — the 75% headline has a ~3% Wilson interval (treat it as "between 72% and 78%").
 
 Full list in [`docs/methodology.md`](docs/methodology.md).
+
+---
 
 ## Scope and intent
 
@@ -140,9 +188,14 @@ This repository is a **research and educational project**. It demonstrates a cle
 
 Use it to study the methodology, reproduce the numbers, or extend the model.
 
-## Contributing
+---
 
-PRs welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the ground rules (no leakage, time-based splits only, Parquet over CSV, every metric must be reproducible).
+## Going deeper
+
+- [`docs/methodology.md`](docs/methodology.md) — design decisions, leakage discipline, why Elo, walk-forward validation, cold-start handling
+- [`docs/results.md`](docs/results.md) — full metrics, calibration tables, per-category breakdown, feature importance, comparison to published baselines
+- [`experiments/london_2026_report.html`](experiments/london_2026_report.html) — every prediction in the holdout tournament, sortable / filterable
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — ground rules for PRs
 
 ## License
 

@@ -1,12 +1,12 @@
 # Results
 
-All metrics on this page are reproducible from the code in this repository, against data scraped from the ITTF results API as of 2026-03-16 (training/holdout) and 2026-05-10 (London 2026 unseen tournament).
+All metrics on this page are reproducible from the code in this repository, against data scraped from the ITTF results API as of 2026-03-16 (training/holdout) and 2026-05-10 (the WTTC London 2026 unseen tournament — the 2026 World Team Table Tennis Championships in London, April 28 to May 10).
 
 ## Headline
 
 | Test | Matches | Accuracy | AUC | Brier | LogLoss |
 |---|---:|---:|---:|---:|---:|
-| **London 2026 (truly unseen tournament)** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
+| **WTTC London 2026 (truly unseen tournament)** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
 | 2024-2026 time-based holdout (RF v2 enhanced) | ~21k | 70.26% | 0.7794 | - | - |
 | Pure Elo prior (no model, London 2026) | 822 | 73.97% | 0.8333 | 0.1671 | 0.5024 |
 

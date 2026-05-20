@@ -4,7 +4,7 @@ Repo guidance for AI assistants working on this codebase.
 
 ## Project
 
-Table tennis match prediction using sequential Elo ratings + Random Forest. Headline: 75.06% accuracy / 0.836 AUC on truly-unseen ITTF World Team Championships London 2026.
+Table tennis match prediction using sequential Elo ratings + Random Forest. Headline: 75.06% accuracy / 0.836 AUC on the truly-unseen 2026 World Team Table Tennis Championships (WTTC London 2026, April 28 - May 10, 2026).
 
 ## Structure
 

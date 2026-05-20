@@ -61,7 +61,7 @@ Recent form is computed *per player*, walking each player's match history in tim
 
 ## 5. Walk-forward validation
 
-We do not trust a single train/test split. The reported holdout (London 2026) is one slice; the time-based 2024-2026 holdout is another. Both should agree, and they do (75.06% vs ~70%).
+We do not trust a single train/test split. The reported holdout (WTTC London 2026 — the 2026 World Team Table Tennis Championships) is one slice; the time-based 2024-2026 holdout is another. Both should agree, and they do (75.06% vs ~70%).
 
 For deeper validation, `pipeline/forward_test.py` runs walk-forward evaluation: roll the train cutoff forward month by month, refit, and score the next window. This catches regime shifts (e.g., post-COVID return-to-play distributions) that a single split would hide.
 

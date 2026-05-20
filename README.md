@@ -1,14 +1,14 @@
 # topspin-lab
 
 > **Leak-free Elo + ML forecasting for table tennis.**
-> **70.3% walk-forward accuracy** on a 26-month rolling holdout, **75.1% on a frozen unseen tournament** (ITTF World Team Championships London 2026, 822 singles rubbers).
+> **70.3% walk-forward accuracy** on a 26-month rolling holdout, **75.1% on a frozen unseen tournament** (2026 World Team Table Tennis Championships in London, 822 singles rubbers).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 
-![Reliability diagram - London 2026 holdout](docs/img/calibration_london_2026.png)
+![Reliability diagram - WTTC London 2026 holdout](docs/img/calibration_london_2026.png)
 
-*Reliability diagram on the London 2026 holdout. Dots near the diagonal = predicted probability matches reality. Both Pure Elo and the 9-feature RF track the diagonal across 10 deciles. Bottom bars show match counts per bin (heavier at the tails: the tournament had many lopsided rubbers).*
+*Reliability diagram on the WTTC London 2026 holdout (World Team Table Tennis Championships, ITTF, April-May 2026). Dots near the diagonal = predicted probability matches reality. Both Pure Elo and the 9-feature RF track the diagonal across 10 deciles. Bottom bars show match counts per bin (heavier at the tails: the tournament had many lopsided rubbers).*
 
 ---
 
@@ -16,16 +16,16 @@
 
 I trained a model on every ITTF singles match I could find - **157,836 matches stretching back to 1988**. Then I froze it.
 
-Six weeks later, the ITTF World Team Championships started in London. The model had never seen a single match from it. I asked it to predict all 822 singles rubbers.
+Six weeks later, the **2026 World Team Table Tennis Championships** started in London (ITTF flagship team event, April 28 - May 10, 2026). The model had never seen a single match from it. I asked it to predict all 822 singles rubbers.
 
 It got **617 of them right.**
 
 | Test | n | Accuracy | AUC | Brier | LogLoss |
 |---|---:|---:|---:|---:|---:|
-| **London 2026 - frozen unseen tournament** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
+| **WTTC London 2026 - frozen unseen tournament** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
 | 2024-2026 walk-forward (month-by-month refit) | ~21k | **70.26%** | **0.7794** | - | - |
 
-Both numbers come from time-based splits with strict chronological processing. The **70.3% walk-forward is the steady-state expectation** across the full open-event distribution; the **75.1% London number** is one specific tournament the model never saw - elite-heavier than average, so easier to predict. Quote whichever fits your question. The full method is in [`docs/methodology.md`](docs/methodology.md).
+Both numbers come from time-based splits with strict chronological processing. The **70.3% walk-forward is the steady-state expectation** across the full open-event distribution; the **75.1% WTTC London 2026 number** is one specific tournament the model never saw - elite-heavier than average, so easier to predict. Quote whichever fits your question. The full method is in [`docs/methodology.md`](docs/methodology.md).
 
 ---
 
@@ -63,9 +63,9 @@ Two things stand out. The cloud has a ceiling around 2400 that almost nobody cro
 
 The model was trained on every match up to **2026-03-16**. Frozen.
 
-Then on **April 28**, the ITTF World Team Championships London 2026 started. The model was asked to predict every singles rubber. Two weeks and 822 predictions later:
+Then on **April 28**, the WTTC (World Team Table Tennis Championships) opened in London. The model was asked to predict every singles rubber. Two weeks and 822 predictions later:
 
-[![London 2026 - interactive dashboard](docs/img/london_2026_dashboard.png)](experiments/london_2026_report.html)
+[![WTTC London 2026 - interactive dashboard](docs/img/london_2026_dashboard.png)](experiments/london_2026_report.html)
 
 > *Click the image to open the [full interactive HTML report](experiments/london_2026_report.html) - every match, every prediction, every actual outcome.*
 

@@ -53,7 +53,7 @@ Table tennis match prediction using sequential Elo ratings + Random Forest. Head
 
 - Training corpus: 157,836 matches up to 2026-03-16
 - London 2026 holdout (822 singles rubbers): **75.06% acc / 0.8356 AUC**
-- 2024–2026 time-based holdout: 70.26% acc / 0.7794 AUC
+- 2024-2026 time-based holdout: 70.26% acc / 0.7794 AUC
 - Pure Elo prior alone: 73.97% acc - carries ~95% of signal
 - Top feature: `elo_difference` (~59% importance). Opponent recent form ~2× player's own.
 

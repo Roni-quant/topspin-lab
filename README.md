@@ -19,7 +19,7 @@ It got **617 of them right.**
 | Test | n | Accuracy | AUC | Brier | LogLoss |
 |---|---:|---:|---:|---:|---:|
 | **London 2026 - frozen unseen tournament** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
-| 2024–2026 walk-forward (month-by-month refit) | ~21k | **70.26%** | **0.7794** | - | - |
+| 2024-2026 walk-forward (month-by-month refit) | ~21k | **70.26%** | **0.7794** | - | - |
 
 Both numbers come from time-based splits with strict chronological processing. The **70.3% walk-forward is the steady-state expectation** across the full open-event distribution; the **75.1% London number** is one specific tournament the model never saw - elite-heavier than average, so easier to predict. Quote whichever fits your question. The full method is in [`docs/methodology.md`](docs/methodology.md).
 
@@ -29,11 +29,11 @@ Both numbers come from time-based splits with strict chronological processing. T
 
 Most "AI predicts sports" results score on a re-split of the training distribution. The headline number is real but uninformative - the model has already statistically seen the test set. I wanted to see what a simple Elo + RF stack looks like when the holdout is an event that did not exist when the model was frozen.
 
-Three rules the codebase enforces:
+Rules enforced in code:
 
-1. **No look-ahead bias.** Every feature at time `t` uses only data with timestamp `< t`. Treated as a correctness bug, not a performance issue.
-2. **Time-based splits only.** Never random splits on time-series data.
-3. **Reproducibility.** Every metric on this page regenerates from raw data + code. No `.pkl` artifacts committed.
+- No look-ahead bias. Every feature at time `t` uses only data with timestamp `< t`. Treated as a correctness bug, not a performance issue.
+- Time-based splits only. Never random splits on time-series.
+- Every metric on this page regenerates from raw data + code. No `.pkl` artifacts committed.
 
 ---
 
@@ -45,13 +45,13 @@ That gives every player a trajectory. Here's Ma Long's, the most-rated player in
 
 ![Ma Long - Elo trajectory over his career](docs/img/player_elo_ma_long.png)
 
-White line is his full career. Green is his peak window - the top 20% of matches by smoothed Elo. The green dot is his career peak rating in our data: **~2600**, roughly 1100 points above a base-rate player. That is what "world-class" looks like to the model.
+White line is his full career. Green is his peak window: the top 20% of matches by smoothed Elo. The green dot is his career peak rating in our data, ~2600, about 1100 points above base. That's what "world-class" looks like to the model.
 
 Now look at all 1,486 players with 50+ matches, with three stars overlaid:
 
 ![All players with three stars](docs/img/all_players_overlay.png)
 
-Two things to notice. **First**, the cloud has a ceiling - almost nobody crosses ~2400. **Second**, the stars escape that ceiling on a remarkably consistent trajectory: each builds from base Elo through their first ~100 matches, then climbs. The model doesn't know the names. It just sees three players whose ratings keep going up.
+Two things stand out. The cloud has a ceiling around 2400 that almost nobody crosses. The stars escape that ceiling along a similar shape: build from base Elo through ~100 matches, then climb. The model doesn't know the names. It just sees three players whose ratings keep going up.
 
 ---
 
@@ -71,15 +71,11 @@ Then on **April 28**, the ITTF World Team Championships London 2026 started. The
 
 ## What surprised me
 
-Three findings I didn't expect:
+Pure Elo alone scores 73.97% on London 2026. No ML, no features, just rating difference. The 9-feature Random Forest adds one percentage point. Most of the table-tennis signal lives in a single number computed by 1960s arithmetic, and the ML stack is a small lift on top.
 
-1. **Pure Elo alone gets 73.97%.** No ML, no features. Just rating difference. The Random Forest adds *one percentage point*. Most of the signal in table tennis lives in a single number computed by 1960s arithmetic.
+Inside that small lift, the opponent's recent form is about 2x more predictive than the player's own form (feature importance: `form_last_5_b` ~12% vs `form_last_5_a` ~6%). Reading: a player on a cold streak facing a strong opponent is a clearer signal than a player on a hot streak. Strong opponents punish weakness more reliably than they reward strength.
 
-2. **Opponent's recent form is ~2× more predictive than the player's own.** A player on a cold streak entering a match against a strong opponent is a clearer signal than a player on a hot streak. Strong opponents punish weakness more reliably than they reward strength.
-
-3. **The 9-feature model is well-calibrated mid-range but under-confident at the extremes.** When it says 90%, reality is 95%. This is the opposite failure mode from most ML models, which over-confidently shout 90% when reality is 75%.
-
-If a 9-feature RF is one point better than rating-difference alone, that *is* the result. The Elo baseline is the bar - and the bar is already high.
+The model is also under-confident at the extremes. When it predicts 90%, reality is closer to 95%. Opposite of the usual failure mode, where models over-shout at the tails. Full reliability table in [`docs/results.md`](docs/results.md).
 
 ---
 
@@ -99,7 +95,7 @@ One command runs the whole thing:
 python scripts/reproduce_london.py
 ```
 
-It scrapes, cleans, computes Elo, builds features, trains the RF, scores London 2026, writes the HTML report, and regenerates plots. Roughly 30 to 90 minutes depending on ITTF API speed and your CPU.
+It scrapes, cleans, computes Elo, builds features, trains the RF, scores London 2026, writes the HTML report, and regenerates plots. 30 to 90 minutes depending on ITTF API speed and your CPU.
 
 Resume from partial state with flags:
 
@@ -120,7 +116,20 @@ ITTF API   →  raw_matches  →  clean  →  Elo ratings  →  features  →  R
 (scrape)      (Parquet)       (dedupe)  (sequential)    (form + Elo)  (predict)
 ```
 
-Each stage is a separate Python module under `pipeline/`, reads Parquet, writes Parquet, and is idempotent. The Elo engine (`ratings/elo.py`) is plain Python - standard K=32, base 1500. The Random Forest uses 9 features:
+Each stage is a separate Python module under `pipeline/`, reads Parquet, writes Parquet, and is idempotent.
+
+### The Elo update
+
+Two equations, applied after every match. Both players start at `R = 1500`.
+
+```
+Expected score for A:   E_A = 1 / (1 + 10^((R_B - R_A) / 400))
+Rating update after:    R_A' = R_A + K * (S_A - E_A)
+```
+
+`S_A` is the actual outcome (1 if A won, 0 if A lost). `K = 32` controls how fast ratings move. If A beats a much stronger B, `S_A - E_A` is large and positive: A gains a lot. If A beats a weaker B, the gain is small (the win was expected). Same logic in reverse for B. No batch refit. Ratings before each match are captured before the update, so features at time `t` only ever see ratings derived from matches at time `< t`.
+
+Implemented in ~60 lines at [`ratings/elo.py`](ratings/elo.py). The Random Forest sits on top with 9 features:
 
 | Feature | What it measures |
 |---|---|
@@ -174,13 +183,7 @@ Full list in [`docs/methodology.md`](docs/methodology.md).
 
 ## Scope and intent
 
-This repository is a **research and educational project**. It demonstrates a clean, leakage-free Elo + ML pipeline for predicting table-tennis outcomes and reports honest out-of-sample numbers. It is:
-
-- **Not** a betting tool. There is no odds-API integration, no staking logic, no money flow.
-- **Not** financial advice. Predicted probabilities are model outputs, not signals to act on.
-- **Not** affiliated with the ITTF or any bookmaker.
-
-Use it to study the methodology, reproduce the numbers, or extend the model.
+Research and educational project. No odds-API integration, no staking logic, no money flow. Predicted probabilities are model outputs, not signals to act on. Not affiliated with the ITTF or any bookmaker. Use it to study the methodology, reproduce the numbers, or extend the model.
 
 ---
 

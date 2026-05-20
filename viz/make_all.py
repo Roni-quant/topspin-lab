@@ -33,7 +33,7 @@ def main() -> None:
 
     print("\n[2/2] All-players overlay")
     # Reuse the script's argparse-driven main by faking argv? Cleaner: call its
-    # internals directly. Keep it simple — shell out via the script.
+    # internals directly. Keep it simple - shell out via the script.
     import subprocess, sys
     subprocess.run([sys.executable, "-m", "viz.all_players_overlay"], check=True)
 

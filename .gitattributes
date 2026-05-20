@@ -1,0 +1,4 @@
+# Linguist overrides - the generated London 2026 dashboard is a build artifact,
+# not source. Excluding it lets GitHub correctly classify this repo as Python.
+experiments/london_2026_report.html linguist-generated=true
+docs/img/* linguist-generated=true

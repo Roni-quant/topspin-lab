@@ -7,7 +7,7 @@ All metrics on this page are reproducible from the code in this repository, agai
 | Test | Matches | Accuracy | AUC | Brier | LogLoss |
 |---|---:|---:|---:|---:|---:|
 | **London 2026 (truly unseen tournament)** | 822 | **75.06%** | **0.8356** | 0.1666 | 0.5022 |
-| 2024–2026 time-based holdout (RF v2 enhanced) | ~21k | 70.26% | 0.7794 | — | — |
+| 2024–2026 time-based holdout (RF v2 enhanced) | ~21k | 70.26% | 0.7794 | - | - |
 | Pure Elo prior (no model, London 2026) | 822 | 73.97% | 0.8333 | 0.1671 | 0.5024 |
 
 The model generalizes better on the London 2026 tournament than on the broader 2024–2026 holdout. The likely reason: team championships pair elite-tier vs lower-tier players more often than open events, producing more lopsided (easier-to-predict) matches.
@@ -27,7 +27,7 @@ python -m pipeline.clean
 python -m pipeline.compute_elo
 python -m pipeline.generate_features_v2
 
-# 3. Train model (writes models/random_forest_v2.pkl locally — not committed)
+# 3. Train model (writes models/random_forest_v2.pkl locally - not committed)
 python -m experiments.retrain_enhanced_rf
 
 # 4. Fetch the unseen tournament + validate
@@ -65,7 +65,7 @@ Pure Elo is slightly better calibrated in the mid-range; the RF compresses proba
 | Men's Team (MT) | 434 | 74.19% | 74.42% |
 | Women's Team (WT) | 388 | 73.71% | **75.77%** |
 
-The form features contribute more on the women's draw — possibly because the WT field has wider talent spread, so recent results are a stronger tiebreaker between similarly-rated players.
+The form features contribute more on the women's draw - possibly because the WT field has wider talent spread, so recent results are a stronger tiebreaker between similarly-rated players.
 
 ## Cold-start
 
@@ -83,14 +83,14 @@ From `train_models_v2` on the 2024+ holdout:
 | `form_last_5_a` | ~6% |
 | Others (form_7d, matches_7d) | ~15% combined |
 
-Notably, **the opponent's recent form is roughly 2× more predictive than the player's own**. Intuition: a player on a cold streak entering a match against a strong opponent is a clearer signal than a player on a hot streak — strong opponents punish weakness more reliably than they reward strength.
+Notably, **the opponent's recent form is roughly 2× more predictive than the player's own**. Intuition: a player on a cold streak entering a match against a strong opponent is a clearer signal than a player on a hot streak - strong opponents punish weakness more reliably than they reward strength.
 
 ## What the model gets wrong
 
 Inspecting the misclassified London matches (see `experiments/london_2026_predictions.csv` filtered by `correct == False`):
 
 - **Upsets where Elo difference > 200**: ~12% of high-confidence predictions still missed. These tend to be returning players (long layoffs) or matches involving very new players who built strong recent form but have a thin Elo history.
-- **Tight matches (|Elo diff| < 50)**: model essentially flips a coin (52% acc). Honest behavior — there is little signal to extract.
+- **Tight matches (|Elo diff| < 50)**: model essentially flips a coin (52% acc). Honest behavior - there is little signal to extract.
 
 ## Comparison to published baselines
 

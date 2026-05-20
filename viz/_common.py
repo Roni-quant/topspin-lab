@@ -105,6 +105,6 @@ def find_player_id(name_substring: str) -> int:
     if len(hits) > 1:
         sample = ", ".join(n for _, n in hits[:5])
         raise LookupError(
-            f"Ambiguous '{name_substring}' — {len(hits)} matches: {sample}..."
+            f"Ambiguous '{name_substring}' - {len(hits)} matches: {sample}..."
         )
     return hits[0][0]

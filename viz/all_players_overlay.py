@@ -1,4 +1,4 @@
-"""Viz 2 — Every active player's Elo over career, with 3 stars overlaid.
+"""Viz 2 - Every active player's Elo over career, with 3 stars overlaid.
 
 Matches the tweet aesthetic: a dense gray cloud of all players' careers, with
 three named stars highlighted in red / blue / green. Shows where the ceiling
@@ -70,12 +70,12 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(12, 6.5))
 
-    # Crowd — every qualifying player as a faint gray line
+    # Crowd - every qualifying player as a faint gray line
     for pid, elo in all_series.items():
         ax.plot(np.arange(1, len(elo) + 1), elo, color="#bbbbbb",
                 linewidth=0.4, alpha=0.06, zorder=1)
 
-    # Stars — thick colored overlay
+    # Stars - thick colored overlay
     for pid, name, color in star_ids:
         elo = all_series.get(pid)
         if elo is None or len(elo) == 0:
@@ -86,7 +86,7 @@ def main() -> None:
         ax.plot(np.arange(1, len(elo) + 1), elo, color=color,
                 linewidth=2.4, alpha=0.95, label=name, zorder=3)
 
-    ax.set_title("Elo Ratings Over Career — All Players, Three Stars Highlighted")
+    ax.set_title("Elo Ratings Over Career - All Players, Three Stars Highlighted")
     ax.set_xlabel("Match number")
     ax.set_ylabel("Elo rating (pre-match)")
     ax.legend(loc="lower right", framealpha=0.0, labelcolor="white")

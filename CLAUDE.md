@@ -8,13 +8,13 @@ Table tennis match prediction using sequential Elo ratings + Random Forest. Head
 
 ## Structure
 
-- `pipeline/` — numbered scrape → clean → Elo → features → train stages
-- `ratings/` — Elo engine (`elo.py`)
-- `experiments/` — London 2026 validation, retrain script, HTML report builder
-- `viz/` — plot generators (writes `docs/img/*.png`)
-- `docs/` — `methodology.md` + `results.md` + generated images
-- `tests/` — scraper / rate-limiter tests
-- `data/`, `models/` — local artifacts (gitignored, regenerate)
+- `pipeline/` - numbered scrape → clean → Elo → features → train stages
+- `ratings/` - Elo engine (`elo.py`)
+- `experiments/` - London 2026 validation, retrain script, HTML report builder
+- `viz/` - plot generators (writes `docs/img/*.png`)
+- `docs/` - `methodology.md` + `results.md` + generated images
+- `tests/` - scraper / rate-limiter tests
+- `data/`, `models/` - local artifacts (gitignored, regenerate)
 
 ## Pipeline Stages (run in order)
 
@@ -30,10 +30,10 @@ Table tennis match prediction using sequential Elo ratings + Random Forest. Head
 ## Key Rules
 
 - Parquet only (no CSV for datasets)
-- Strict chronological processing — never reorder matches
-- No look-ahead — features at time `t` use only data with timestamp `< t`
+- Strict chronological processing - never reorder matches
+- No look-ahead - features at time `t` use only data with timestamp `< t`
 - Time-based splits only (no random splits on time-series)
-- `models/*.pkl` never committed — regenerate via retrain script
+- `models/*.pkl` never committed - regenerate via retrain script
 
 ## Dataset Schemas
 
@@ -54,7 +54,7 @@ Table tennis match prediction using sequential Elo ratings + Random Forest. Head
 - Training corpus: 157,836 matches up to 2026-03-16
 - London 2026 holdout (822 singles rubbers): **75.06% acc / 0.8356 AUC**
 - 2024–2026 time-based holdout: 70.26% acc / 0.7794 AUC
-- Pure Elo prior alone: 73.97% acc — carries ~95% of signal
+- Pure Elo prior alone: 73.97% acc - carries ~95% of signal
 - Top feature: `elo_difference` (~59% importance). Opponent recent form ~2× player's own.
 
 See `docs/results.md` for full numbers, `docs/methodology.md` for design decisions.
@@ -64,4 +64,4 @@ See `docs/results.md` for full numbers, `docs/methodology.md` for design decisio
 - Player IDs: integer (`Int64`)
 - Base Elo: 1500, K-factor: 32
 - Cold-start matches (≥1 player with zero prior history) excluded from headline metric
-- Doubles filtered at scrape time — Elo on individuals only
+- Doubles filtered at scrape time - Elo on individuals only

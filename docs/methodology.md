@@ -4,7 +4,7 @@ This document describes the design decisions behind the pipeline. The bar is *re
 
 ## 1. The leakage discipline
 
-The single most common failure mode in sports prediction is **look-ahead bias** — letting information that did not exist at prediction time leak into features. We treat leakage as a correctness bug, not a performance issue.
+The single most common failure mode in sports prediction is **look-ahead bias** - letting information that did not exist at prediction time leak into features. We treat leakage as a correctness bug, not a performance issue.
 
 Two rules:
 
@@ -23,7 +23,7 @@ Elo is a maximum-entropy estimator: it is the simplest model that produces calib
 
 1. **Causal**: a player's rating at time `t` is fully determined by matches with `date < t`.
 2. **Sequential**: no batch refit, no risk of in-batch contamination.
-3. **Decomposable**: feature importance trivially attributes signal to "rating difference" vs "form" vs "experience" — useful for diagnosing the model.
+3. **Decomposable**: feature importance trivially attributes signal to "rating difference" vs "form" vs "experience" - useful for diagnosing the model.
 
 We use the standard formulation with `K=32`, base rating `1500`. See `ratings/elo.py`.
 
@@ -48,16 +48,16 @@ Each stage is idempotent: re-running with the same inputs produces the same outp
 ## 4. Feature design
 
 ### Baseline features (5)
-- `elo_difference` — `elo_a_before - elo_b_before`
-- `cumulative_matches_a/b`, `cumulative_wins_a/b` — career counters
+- `elo_difference` - `elo_a_before - elo_b_before`
+- `cumulative_matches_a/b`, `cumulative_wins_a/b` - career counters
 
 ### Enhanced features (9)
 - `elo_difference`
-- `form_last_5_a/b`, `form_last_10_a/b` — win rate over the last N matches
-- `form_7_days_a/b` — win rate over the last 7 days (fatigue signal)
-- `matches_last_7_a/b` — match count over the last 7 days (workload signal)
+- `form_last_5_a/b`, `form_last_10_a/b` - win rate over the last N matches
+- `form_7_days_a/b` - win rate over the last 7 days (fatigue signal)
+- `matches_last_7_a/b` - match count over the last 7 days (workload signal)
 
-Recent form is computed *per player*, walking each player's match history in time order. A player's first match has all form features as `NaN` (filled with 0 at training time — explicitly noted, not silently imputed).
+Recent form is computed *per player*, walking each player's match history in time order. A player's first match has all form features as `NaN` (filled with 0 at training time - explicitly noted, not silently imputed).
 
 ## 5. Walk-forward validation
 
@@ -69,7 +69,7 @@ For deeper validation, `pipeline/forward_test.py` runs walk-forward evaluation: 
 
 A "cold-start match" is one where at least one player has zero prior matches in our history. Two reasonable policies:
 
-1. **Assign base Elo (1500) and predict normally.** Cheap but adds noise to evaluation — we are scoring the model on data the model has no information about.
+1. **Assign base Elo (1500) and predict normally.** Cheap but adds noise to evaluation - we are scoring the model on data the model has no information about.
 2. **Exclude from evaluation and report the count separately.** What we do.
 
 In London 2026, 35 of 857 singles matches (4.1%) involved at least one cold-start player. These are excluded from the headline metric but reported alongside it.
@@ -78,7 +78,7 @@ In London 2026, 35 of 857 singles matches (4.1%) involved at least one cold-star
 
 The World Team Championships is a *team* event. Each tie is best-of-5 rubbers (4 singles + 1 doubles). Doubles matches are excluded from the model because:
 
-1. Player identity in doubles is a pair, not an individual — Elo on individuals does not apply.
+1. Player identity in doubles is a pair, not an individual - Elo on individuals does not apply.
 2. The ITTF API tags doubles differently (`MD`/`WD` vs `MT`/`WT`) and our scraper filters them out.
 
 The 822 evaluated London matches are individual singles rubbers inside team contests, not team contest outcomes. To predict at the team-contest level, aggregate the per-rubber probabilities.
@@ -94,6 +94,6 @@ The 822 evaluated London matches are individual singles rubbers inside team cont
 - **No surface / equipment effects.** Plastic balls vs celluloid, rubber type, etc. are not modeled.
 - **No bo-3 vs bo-5 distinction.** All matches treated equally for Elo updates.
 - **K-factor not tuned.** Could be a function of event tier or match importance.
-- **No team-rubber order modeling.** In team ties, match order is strategically chosen — we ignore that.
+- **No team-rubber order modeling.** In team ties, match order is strategically chosen - we ignore that.
 
 PRs that close these gaps with rigorous backtests are welcome.

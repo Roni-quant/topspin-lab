@@ -1,8 +1,8 @@
-"""Viz 1 — One player's Elo over their career.
+"""Viz 1 - One player's Elo over their career.
 
 Matches the tweet aesthetic: dark background, x = match number, y = Elo rating.
-The "peak window" — matches where the player's rolling Elo sits in the top
-20% of their career — is highlighted in green; the rest is white.
+The "peak window" - matches where the player's rolling Elo sits in the top
+20% of their career - is highlighted in green; the rest is white.
 
 Usage:
     python -m viz.player_elo_trajectory                 # default: Ma Long
@@ -38,13 +38,13 @@ def plot_player(player_id: int, name: str) -> Path:
     series = player_elo_series(player_id)
     if len(series) < 10:
         raise ValueError(
-            f"{name} has only {len(series)} matches in the dataset — too few to plot."
+            f"{name} has only {len(series)} matches in the dataset - too few to plot."
         )
 
     match_num = np.arange(1, len(series) + 1)
     elo = series["elo"].to_numpy()
 
-    # Smoothed signal — rolling mean over recent matches
+    # Smoothed signal - rolling mean over recent matches
     win = min(ROLLING_WINDOW, max(5, len(elo) // 10))
     rolling = (
         series["elo"].rolling(window=win, min_periods=1).mean().to_numpy()
@@ -73,7 +73,7 @@ def plot_player(player_id: int, name: str) -> Path:
         color="#39ff14", fontsize=10, fontweight="bold",
     )
 
-    ax.set_title(f"{name} — Elo Rating Over Career")
+    ax.set_title(f"{name} - Elo Rating Over Career")
     ax.set_xlabel("Match number")
     ax.set_ylabel("Elo rating (pre-match)")
     ax.legend(loc="lower right", framealpha=0.0, labelcolor="white")

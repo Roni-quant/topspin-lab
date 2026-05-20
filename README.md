@@ -2,7 +2,8 @@
 
 > **An Elo + ML pipeline for table tennis, validated on a tournament that didn't exist at training time.**
 
-![Elo trajectories — 12,700 careers, 3 stars highlighted](docs/img/all_players_overlay.png)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 
 ---
 

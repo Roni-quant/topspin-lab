@@ -1,0 +1,84 @@
+# ============================================================
+# Secrets & local env
+# ============================================================
+.env
+.env.local
+*.env.local
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# ============================================================
+# Data — not redistributed (ITTF terms-of-service)
+# Users regenerate via `python -m pipeline.fetch_events` etc.
+# ============================================================
+data/raw/
+data/raw_matches.parquet
+data/matches_clean.parquet
+data/matches_with_elo.parquet
+data/model_features.parquet
+data/forward_test_results.parquet
+
+# ============================================================
+# Model artifacts — regenerate via retrain script
+# Pickled models are tied to sklearn version + bloat git.
+# ============================================================
+models/*.pkl
+models/*.joblib
+models/*.onnx
+
+# ============================================================
+# Logs
+# ============================================================
+logs/
+*.log
+
+# ============================================================
+# Local trading / personal data — do NOT publish
+# ============================================================
+mvp/data/trades.csv
+mvp/data/trades_*.csv
+mvp/data/summary.json
+
+# ============================================================
+# IDE / OS
+# ============================================================
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Notebook artifacts
+# ============================================================
+.ipynb_checkpoints/
+
+# ============================================================
+# Claude Code / agent local state + planning artifacts
+# ============================================================
+.claude/settings.local.json
+docs/superpowers/
+AGENTS.md
+
+# Keep .gitkeep so empty dirs survive
+!data/.gitkeep
+!models/.gitkeep

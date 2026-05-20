@@ -120,14 +120,17 @@ Each stage is a separate Python module under `pipeline/`, reads Parquet, writes 
 
 ### The Elo update
 
-Two equations, applied after every match. Both players start at `R = 1500`.
+Two equations, applied after every match. Both players start at $R = 1500$.
 
-```
-Expected score for A:   E_A = 1 / (1 + 10^((R_B - R_A) / 400))
-Rating update after:    R_A' = R_A + K * (S_A - E_A)
-```
+**Expected score for A:**
 
-`S_A` is the actual outcome (1 if A won, 0 if A lost). `K = 32` controls how fast ratings move. If A beats a much stronger B, `S_A - E_A` is large and positive: A gains a lot. If A beats a weaker B, the gain is small (the win was expected). Same logic in reverse for B. No batch refit. Ratings before each match are captured before the update, so features at time `t` only ever see ratings derived from matches at time `< t`.
+$$E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}$$
+
+**Rating update after the match:**
+
+$$R_A' = R_A + K \cdot (S_A - E_A)$$
+
+$S_A$ is the actual outcome (1 if A won, 0 if A lost). $K = 32$ controls how fast ratings move. If A beats a much stronger B, $S_A - E_A$ is large and positive: A gains a lot. If A beats a weaker B, the gain is small (the win was expected). Same logic in reverse for B. No batch refit. Pre-match ratings are captured before the update, so features at time $t$ only ever see ratings derived from matches at time $< t$.
 
 Implemented in ~60 lines at [`ratings/elo.py`](ratings/elo.py). The Random Forest sits on top with 9 features:
 

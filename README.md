@@ -6,6 +6,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 
+![Reliability diagram - London 2026 holdout](docs/img/calibration_london_2026.png)
+
+*Reliability diagram on the London 2026 holdout. Dots near the diagonal = predicted probability matches reality. Both Pure Elo and the 9-feature RF track the diagonal across 10 deciles. Bottom bars show match counts per bin (heavier at the tails: the tournament had many lopsided rubbers).*
+
 ---
 
 ## The hook
@@ -76,6 +80,32 @@ Pure Elo alone scores 73.97% on London 2026. No ML, no features, just rating dif
 Inside that small lift, the opponent's recent form is about 2x more predictive than the player's own form (feature importance: `form_last_5_b` ~12% vs `form_last_5_a` ~6%). Reading: a player on a cold streak facing a strong opponent is a clearer signal than a player on a hot streak. Strong opponents punish weakness more reliably than they reward strength.
 
 The model is also under-confident at the extremes. When it predicts 90%, reality is closer to 95%. Opposite of the usual failure mode, where models over-shout at the tails. Full reliability table in [`docs/results.md`](docs/results.md).
+
+---
+
+## Research observations
+
+Things that came out of building this that aren't in the headline number:
+
+- **Elo difference is ~59% of feature importance.** The next eight features fight over the remaining 41%. The model is mostly a fancy way to apply Elo with a couple of guardrails.
+- **Form windows of 10 matches beat 5 and 7 days.** Shorter windows (5 matches) made form features noisier. The 7-day calendar window was almost always empty for most players outside major tournaments and got dropped from feature importance.
+- **RF barely benefits from added features; LR benefits a lot.** Going from 5 baseline features (Elo + cumulative counts) to 9 enhanced features (Elo + form): LR gained +1.21% AUC, RF gained +0.06%. Reading: RF was already extracting the recent-form signal implicitly from cumulative counts; LR needed it spelled out.
+- **The women's draw is more predictable than the men's.** WT acc 75.77%, MT acc 74.42%. WT has a wider talent spread, so similar-rating matchups are rarer.
+- **Upsets cluster around layoffs and cold-start players.** ~12% of high-confidence predictions miss when one player has had a long inactive stretch (their stale Elo overestimates them). 4.1% of London matches involved a player with zero prior history — excluded from headline metric.
+
+---
+
+## Failed experiments
+
+Not everything that was tried made it to the headline:
+
+- **Per-event-tier K-factor.** Tried `K=24` for opens, `K=40` for majors. Walk-forward AUC moved by <0.001. Cut.
+- **Head-to-head as a feature.** Most player pairs in the corpus meet 0 or 1 times — sparse and high-variance. Adding `h2h_win_rate_a_over_b` lifted training AUC and hurt holdout. Cut. Listed as a "maybe" in `docs/methodology.md` for someone with a richer h2h dataset.
+- **Form window = 5 matches.** Strictly worse than 10. Noisy at the tails. Kept the 5-match feature alongside 10-match because tree models did extract some marginal signal from the combination — but the 5-match alone was useless.
+- **Aggressive recency weighting on Elo.** Doubling K for the last 90 days made hot players over-rated and cold players under-rated. Walk-forward stability collapsed in months following major tournaments. Reverted to flat K=32.
+- **The 7-day calendar form window.** Mean predictive value barely above zero. Most matches outside Grand Smashes have no entries in the prior week. Kept in the feature set for diagnostic purposes only — feature importance is in the noise.
+
+If you have ideas that look obvious and are missing here, they probably were tried and silently dropped. The unstructured working notes live in [`docs/notes/research-log.md`](docs/notes/research-log.md) and an open punch list is at [`docs/notes/TODO.md`](docs/notes/TODO.md).
 
 ---
 
@@ -194,6 +224,8 @@ Research and educational project. No odds-API integration, no staking logic, no 
 
 - [`docs/methodology.md`](docs/methodology.md) - design decisions, leakage discipline, why Elo, walk-forward validation, cold-start handling
 - [`docs/results.md`](docs/results.md) - full metrics, calibration tables, per-category breakdown, feature importance, comparison to published baselines
+- [`docs/notes/research-log.md`](docs/notes/research-log.md) - unpolished working notes; what was tried, what broke, what was cut
+- [`docs/notes/TODO.md`](docs/notes/TODO.md) - open punch list
 - [`experiments/london_2026_report.html`](experiments/london_2026_report.html) - every prediction in the holdout tournament, sortable / filterable
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) - ground rules for PRs
 

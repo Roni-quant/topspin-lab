@@ -6,7 +6,7 @@ Usage:
 
 from __future__ import annotations
 
-from viz import all_players_overlay, player_elo_trajectory
+from viz import all_players_overlay, calibration, player_elo_trajectory
 from viz._common import apply_dark_style, ensure_inputs, find_player_id, player_name_map
 
 
@@ -31,11 +31,15 @@ def main() -> None:
         except Exception as exc:
             print(f"  skip {needle:20}  ({exc})")
 
-    print("\n[2/2] All-players overlay")
-    # Reuse the script's argparse-driven main by faking argv? Cleaner: call its
-    # internals directly. Keep it simple - shell out via the script.
+    print("\n[2/3] All-players overlay")
     import subprocess, sys
     subprocess.run([sys.executable, "-m", "viz.all_players_overlay"], check=True)
+
+    print("\n[3/3] Calibration (London 2026)")
+    try:
+        calibration.main()
+    except FileNotFoundError as exc:
+        print(f"  skip calibration ({exc})")
 
     print("\nDone.")
 
